@@ -8,6 +8,10 @@ import auth from './routes/auth'
 import datasets from './routes/datasets'
 import map from './routes/map'
 import search from './routes/search'
+import features from './routes/features'
+import styles from './routes/styles'
+import exportRoute from './routes/export'
+import users from './routes/users'
 
 const app = new Hono<{ Bindings: Bindings }>()
 
@@ -22,6 +26,10 @@ app.route('/api/auth', auth)
 app.route('/api/datasets', datasets)
 app.route('/api/map', map)
 app.route('/api/search', search)
+app.route('/api/features', features)
+app.route('/api/styles', styles)
+app.route('/api/export', exportRoute)
+app.route('/api/users', users)
 
 // Health check
 app.get('/api/health', (c) => {
@@ -50,6 +58,7 @@ app.get('/', (c) => {
         <div id="root"></div>
         
         <script src="https://unpkg.com/maplibre-gl@4.1.2/dist/maplibre-gl.js"></script>
+        <script src="/static/advanced.js"></script>
         <script type="module" src="/static/app.js"></script>
     </body>
     </html>

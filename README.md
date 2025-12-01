@@ -24,7 +24,10 @@ React + MapLibre GL JS を使用した GIS フロントエンド Web アプリ�
 
 ### 認証・ユーザー管理
 - ✅ JWT ベースのログイン認証
+- ✅ ユーザー登録機能
 - ✅ ロール管理 (admin, editor, viewer)
+- ✅ プロフィール編集
+- ✅ ユーザー設定の保存
 - ✅ ログイン状態の永続化
 
 ### データセット管理
@@ -32,6 +35,13 @@ React + MapLibre GL JS を使用した GIS フロントエンド Web アプリ�
 - ✅ データセット詳細表示
 - ✅ GeoJSON/CSV/Shapefile アップロード
 - ✅ データセット削除 (admin のみ)
+- ✅ データセット統計情報
+
+### データ編集
+- ✅ フィーチャー作成 (描画モード)
+- ✅ フィーチャー編集
+- ✅ フィーチャー削除
+- ✅ 属性情報の編集
 
 ### 地図表示
 - ✅ MapLibre GL JS による地図レンダリング
@@ -40,12 +50,26 @@ React + MapLibre GL JS を使用した GIS フロントエンド Web アプリ�
 - ✅ クラスタリング (自動グループ化)
 - ✅ ズーム・パン操作
 - ✅ レイヤーの表示/非表示切替
+- ✅ レイヤースタイル管理
+- ✅ カスタムスタイル設定
 
 ### 検索・フィルタリング
 - ✅ キーワード検索
-- ✅ 属性フィルタ
+- ✅ SQLite FTS (Full-Text Search)
+- ✅ 高度な属性フィルタ
+- ✅ 複数条件検索
 - ✅ BBOX (地図範囲) 検索
 - ✅ 近傍検索 (指定座標から半径検索)
+
+### データエクスポート
+- ✅ GeoJSON エクスポート
+- ✅ CSV エクスポート
+- ✅ データセット統計レポート
+
+### 高度な機能
+- ✅ 地図スクリーンショット
+- ✅ アクティビティログ
+- ✅ ユーザー設定の保存
 
 ### UI/UX
 - ✅ 3カラムレイアウト (左パネル、地図、右詳細パネル)
@@ -53,6 +77,7 @@ React + MapLibre GL JS を使用した GIS フロントエンド Web アプリ�
 - ✅ クラスタクリックでズームイン
 - ✅ フィーチャークリックで詳細表示
 - ✅ Tailwind CSS によるスタイリング
+- ✅ 高度なツールパネル
 
 ## 🗂️ データアーキテクチャ
 
@@ -66,6 +91,18 @@ React + MapLibre GL JS を使用した GIS フロントエンド Web アプリ�
 
 **features テーブル**
 - id, dataset_id, geometry_type, min_lon, min_lat, max_lon, max_lat, properties_json, created_at
+
+**features_fts テーブル (FTS5 仮想テーブル)**
+- feature_id, dataset_id, properties_text (全文検索用インデックス)
+
+**layer_styles テーブル**
+- id, dataset_id, name, style_json, is_default, created_by, created_at, updated_at
+
+**user_preferences テーブル**
+- user_id, preferences_json, created_at, updated_at
+
+**activity_logs テーブル**
+- id, user_id, action, resource_type, resource_id, details_json, created_at
 
 ### ストレージサービス
 - **Cloudflare D1**: メタデータと検索インデックス
@@ -146,11 +183,24 @@ npm run db:console:prod
 - `POST /api/auth/login` - ログイン
 - `GET /api/auth/me` - 現在のユーザー情報取得
 
+### ユーザー管理
+- `POST /api/users/register` - ユーザー登録
+- `GET /api/users` - ユーザー一覧 (admin のみ)
+- `GET /api/users/:id` - ユーザー詳細
+- `PUT /api/users/:id` - ユーザー情報更新
+- `PUT /api/users/:id/preferences` - ユーザー設定更新
+- `DELETE /api/users/:id` - ユーザー削除 (admin のみ)
+
 ### データセット
 - `GET /api/datasets` - データセット一覧
 - `GET /api/datasets/:id` - データセット詳細
 - `POST /api/datasets/upload` - データセットアップロード
 - `DELETE /api/datasets/:id` - データセット削除
+
+### フィーチャー編集
+- `POST /api/features` - フィーチャー作成
+- `PUT /api/features/:id` - フィーチャー更新
+- `DELETE /api/features/:id` - フィーチャー削除
 
 ### 地図表示
 - `GET /api/map/data` - 地図データ取得 (BBOX指定可能)
@@ -158,41 +208,54 @@ npm run db:console:prod
 - `GET /api/map/features/:id` - フィーチャー詳細
 
 ### 検索
-- `GET /api/search` - 属性検索
+- `GET /api/search` - 属性検索 (FTS対応)
+- `GET /api/search/advanced` - 高度な検索
 
-## 🛠️ 未実装機能
+### スタイル管理
+- `GET /api/styles` - スタイル一覧
+- `POST /api/styles` - スタイル作成
+- `PUT /api/styles/:id` - スタイル更新
+- `DELETE /api/styles/:id` - スタイル削除
+
+### エクスポート
+- `GET /api/export/geojson` - GeoJSON エクスポート
+- `GET /api/export/csv` - CSV エクスポート
+- `GET /api/export/summary` - データセット統計
+
+## 🛠️ 未実装機能 (将来の拡張)
 
 ### 次のステップで実装推奨
 
-1. **高度な検索機能**
-   - SQLite FTS (Full-Text Search) の導入
-   - 複雑な属性フィルタ
-   - 空間演算 (Intersects, Contains など)
+1. **高度な空間演算**
+   - 空間演算 (Intersects, Contains, Within など)
+   - バッファ解析
+   - オーバーレイ解析
 
-2. **データ編集機能**
-   - フィーチャーの追加・編集・削除
-   - 属性情報の編集
-   - ジオメトリの編集
+2. **高度な可視化**
+   - ヒートマップレイヤー
+   - 3D 地形表示
+   - アニメーション機能
+   - タイムスライダー
 
-3. **スタイル管理**
-   - レイヤースタイルの保存
-   - カラースキームのカスタマイズ
-   - シンボルライブラリ
+3. **ジオメトリ編集**
+   - ライン・ポリゴン描画
+   - 頂点編集
+   - スナップ機能
+   - ジオメトリバリデーション
 
-4. **エクスポート機能**
-   - GeoJSON エクスポート
-   - CSV エクスポート
-   - 地図画像エクスポート
+4. **データ連携**
+   - WMS/WFS 連携
+   - PostGIS 直接接続
+   - リアルタイムデータ更新
 
-5. **ユーザー管理**
-   - ユーザー登録機能
-   - パスワードリセット
-   - プロフィール編集
+5. **レポート機能**
+   - PDF レポート生成
+   - カスタムテンプレート
+   - 統計グラフ
 
-6. **高度なクラスタリング**
-   - カスタムクラスタ設定
-   - ヒートマップ表示
-   - 統計情報の表示
+6. **多言語対応**
+   - 日本語/韓国語/英語切替
+   - i18n 対応
 
 ## 🔧 デプロイメント
 

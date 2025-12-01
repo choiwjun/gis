@@ -164,18 +164,50 @@ async function showApp() {
 
         <!-- Dataset Management -->
         ${currentUser.role !== 'viewer' ? `
-        <div class="p-4">
+        <div class="p-4 border-b">
           <h2 class="text-lg font-semibold mb-3">
             <i class="fas fa-database mr-2"></i>
             データセット管理
           </h2>
           <button onclick="showUploadForm()" 
-            class="w-full bg-green-600 text-white py-2 rounded hover:bg-green-700">
+            class="w-full bg-green-600 text-white py-2 rounded hover:bg-green-700 mb-2">
             <i class="fas fa-upload mr-2"></i>
             アップロード
           </button>
         </div>
         ` : ''}
+
+        <!-- Advanced Tools -->
+        <div class="p-4">
+          <h2 class="text-lg font-semibold mb-3">
+            <i class="fas fa-tools mr-2"></i>
+            高度なツール
+          </h2>
+          <div class="space-y-2">
+            <button onclick="showAdvancedSearchDialog()" 
+              class="w-full bg-purple-600 text-white py-2 rounded hover:bg-purple-700 text-sm">
+              <i class="fas fa-search-plus mr-2"></i>
+              高度な検索
+            </button>
+            ${currentUser.role !== 'viewer' ? `
+            <button onclick="toggleDrawMode()" id="draw-toggle-btn"
+              class="w-full bg-orange-600 text-white py-2 rounded hover:bg-orange-700 text-sm">
+              <i class="fas fa-draw-polygon mr-2"></i>
+              描画モード
+            </button>
+            ` : ''}
+            <button onclick="showExportMenu()" 
+              class="w-full bg-teal-600 text-white py-2 rounded hover:bg-teal-700 text-sm">
+              <i class="fas fa-download mr-2"></i>
+              エクスポート
+            </button>
+            <button onclick="captureMap()" 
+              class="w-full bg-indigo-600 text-white py-2 rounded hover:bg-indigo-700 text-sm">
+              <i class="fas fa-camera mr-2"></i>
+              スクリーンショット
+            </button>
+          </div>
+        </div>
       </div>
 
       <!-- Map Container -->
@@ -204,6 +236,13 @@ async function showApp() {
   
   // Load datasets
   loadDatasets();
+  
+  // Initialize advanced features
+  setTimeout(() => {
+    if (typeof initAdvancedFeatures !== 'undefined') {
+      initAdvancedFeatures(map, API_BASE, accessToken);
+    }
+  }, 1000);
 }
 
 // Initialize MapLibre map
@@ -601,6 +640,104 @@ function logout() {
   location.reload();
 }
 
+// Advanced feature functions
+function showAdvancedSearchDialog() {
+  if (!currentDataset) {
+    alert('まずレイヤーを選択してください');
+    return;
+  }
+  if (window.advancedSearch) {
+    window.advancedSearch.showSearchDialog(currentDataset.id);
+  }
+}
+
+let drawModeActive = false;
+function toggleDrawMode() {
+  if (!currentDataset) {
+    alert('まずレイヤーを選択してください');
+    return;
+  }
+  
+  if (!window.featureEditor) {
+    alert('機能が初期化されていません');
+    return;
+  }
+  
+  drawModeActive = !drawModeActive;
+  const btn = document.getElementById('draw-toggle-btn');
+  
+  if (drawModeActive) {
+    window.featureEditor.enableDrawMode(currentDataset.id);
+    btn.classList.add('bg-red-600');
+    btn.classList.remove('bg-orange-600');
+    btn.innerHTML = '<i class="fas fa-times mr-2"></i>描画終了';
+  } else {
+    window.featureEditor.disableDrawMode();
+    btn.classList.remove('bg-red-600');
+    btn.classList.add('bg-orange-600');
+    btn.innerHTML = '<i class="fas fa-draw-polygon mr-2"></i>描画モード';
+  }
+}
+
+function showExportMenu() {
+  if (!currentDataset) {
+    alert('まずレイヤーを選択してください');
+    return;
+  }
+  
+  const modal = document.createElement('div');
+  modal.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50';
+  modal.innerHTML = `
+    <div class="bg-white rounded-lg p-6 w-80">
+      <h2 class="text-xl font-bold mb-4">エクスポート</h2>
+      <div class="space-y-2">
+        <button onclick="exportGeoJSON(); this.closest('.fixed').remove();"
+          class="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700">
+          <i class="fas fa-file-code mr-2"></i>GeoJSON
+        </button>
+        <button onclick="exportCSV(); this.closest('.fixed').remove();"
+          class="w-full bg-green-600 text-white py-2 rounded hover:bg-green-700">
+          <i class="fas fa-file-csv mr-2"></i>CSV
+        </button>
+        <button onclick="showSummary(); this.closest('.fixed').remove();"
+          class="w-full bg-purple-600 text-white py-2 rounded hover:bg-purple-700">
+          <i class="fas fa-chart-bar mr-2"></i>統計情報
+        </button>
+        <button onclick="this.closest('.fixed').remove()"
+          class="w-full bg-gray-300 text-gray-700 py-2 rounded hover:bg-gray-400">
+          キャンセル
+        </button>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(modal);
+}
+
+function exportGeoJSON() {
+  if (window.dataExporter && currentDataset) {
+    window.dataExporter.exportGeoJSON(currentDataset.id, currentDataset.name);
+  }
+}
+
+function exportCSV() {
+  if (window.dataExporter && currentDataset) {
+    window.dataExporter.exportCSV(currentDataset.id, currentDataset.name);
+  }
+}
+
+function showSummary() {
+  if (window.dataExporter && currentDataset) {
+    window.dataExporter.getSummary(currentDataset.id);
+  }
+}
+
+function captureMap() {
+  if (window.captureMapScreenshot && map) {
+    const filename = `map_${new Date().toISOString().slice(0,10)}.png`;
+    window.captureMapScreenshot(map, filename);
+  }
+}
+
 // Make functions globally accessible
 window.logout = logout;
 window.performSearch = performSearch;
@@ -608,3 +745,11 @@ window.toggleLayer = toggleLayer;
 window.loadDatasets = loadDatasets;
 window.showUploadForm = showUploadForm;
 window.closeDetailPanel = closeDetailPanel;
+window.loadAndDisplayDataset = loadAndDisplayDataset;
+window.showAdvancedSearchDialog = showAdvancedSearchDialog;
+window.toggleDrawMode = toggleDrawMode;
+window.showExportMenu = showExportMenu;
+window.exportGeoJSON = exportGeoJSON;
+window.exportCSV = exportCSV;
+window.showSummary = showSummary;
+window.captureMap = captureMap;
