@@ -15,6 +15,12 @@ map.get('/data', async (c: AppContext) => {
     const bboxStr = c.req.query('bbox');
     const zoom = parseInt(c.req.query('zoom') || '10');
     const limit = parseInt(c.req.query('limit') || '2000');
+    
+    // Also accept individual bbox parameters
+    const minLon = c.req.query('minLon');
+    const minLat = c.req.query('minLat');
+    const maxLon = c.req.query('maxLon');
+    const maxLat = c.req.query('maxLat');
 
     if (!datasetId) {
       return c.json(errorResponse('VALIDATION_ERROR', 'datasetId は必須です'), 400);
@@ -23,14 +29,24 @@ map.get('/data', async (c: AppContext) => {
     let query = 'SELECT * FROM features WHERE dataset_id = ?';
     const params: any[] = [datasetId];
 
-    // Apply BBOX filter
+    // Apply BBOX filter from either bbox string or individual parameters
+    let bbox = null;
     if (bboxStr) {
-      const bbox = parseBBox(bboxStr);
-      if (!bbox) {
-        return c.json(errorResponse('VALIDATION_ERROR', 'bbox の形式が正しくありません'), 400);
-      }
-
-      query += ` AND min_lon >= ? AND max_lon <= ? AND min_lat >= ? AND max_lat <= ?`;
+      bbox = parseBBox(bboxStr);
+    } else if (minLon && minLat && maxLon && maxLat) {
+      bbox = {
+        minLon: parseFloat(minLon),
+        minLat: parseFloat(minLat),
+        maxLon: parseFloat(maxLon),
+        maxLat: parseFloat(maxLat)
+      };
+    }
+    
+    if (bbox) {
+      // Use proper overlap detection: feature overlaps with bbox if
+      // feature.min_lon <= bbox.maxLon AND feature.max_lon >= bbox.minLon
+      // AND feature.min_lat <= bbox.maxLat AND feature.max_lat >= bbox.minLat
+      query += ` AND max_lon >= ? AND min_lon <= ? AND max_lat >= ? AND min_lat <= ?`;
       params.push(bbox.minLon, bbox.maxLon, bbox.minLat, bbox.maxLat);
     }
 

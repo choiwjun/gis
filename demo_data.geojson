@@ -1,0 +1,470 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [126.9780, 37.5665]
+      },
+      "properties": {
+        "name": "서울역",
+        "category": "교통",
+        "type": "기차역",
+        "score": 95,
+        "address": "서울특별시 중구 세종대로 2",
+        "description": "서울의 중심 기차역"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [127.0276, 37.4979]
+      },
+      "properties": {
+        "name": "강남역",
+        "category": "교통",
+        "type": "지하철역",
+        "score": 98,
+        "address": "서울특별시 강남구 강남대로 396",
+        "description": "서울 최대 상권 지하철역"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [126.9910, 37.5511]
+      },
+      "properties": {
+        "name": "명동성당",
+        "category": "관광",
+        "type": "종교시설",
+        "score": 88,
+        "address": "서울특별시 중구 명동길 74",
+        "description": "한국 천주교의 상징적 건축물"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [126.9774, 37.5797]
+      },
+      "properties": {
+        "name": "경복궁",
+        "category": "관광",
+        "type": "문화재",
+        "score": 92,
+        "address": "서울특별시 종로구 사직로 161",
+        "description": "조선왕조의 법궁"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [127.0473, 37.5173]
+      },
+      "properties": {
+        "name": "코엑스",
+        "category": "상업",
+        "type": "쇼핑몰",
+        "score": 85,
+        "address": "서울특별시 강남구 영동대로 513",
+        "description": "아시아 최대 규모 지하 쇼핑몰"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [126.9244, 37.5547]
+      },
+      "properties": {
+        "name": "홍대입구역",
+        "category": "문화",
+        "type": "거리",
+        "score": 90,
+        "address": "서울특별시 마포구 양화로 160",
+        "description": "젊음의 거리, 인디 문화의 중심"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [127.1048, 37.5111]
+      },
+      "properties": {
+        "name": "롯데월드타워",
+        "category": "관광",
+        "type": "랜드마크",
+        "score": 94,
+        "address": "서울특별시 송파구 올림픽로 300",
+        "description": "대한민국 최고층 빌딩 (555m)"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [126.9882, 37.5796]
+      },
+      "properties": {
+        "name": "청와대",
+        "category": "정치",
+        "type": "관공서",
+        "score": 89,
+        "address": "서울특별시 종로구 청와대로 1",
+        "description": "대한민국 대통령 집무실"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [126.9407, 37.5518]
+      },
+      "properties": {
+        "name": "여의도공원",
+        "category": "공원",
+        "type": "휴식공간",
+        "score": 82,
+        "address": "서울특별시 영등포구 여의공원로 120",
+        "description": "한강변 대표 공원"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [126.9883, 37.5638]
+      },
+      "properties": {
+        "name": "광화문광장",
+        "category": "관광",
+        "type": "광장",
+        "score": 91,
+        "address": "서울특별시 종로구 세종로",
+        "description": "서울의 대표 광장"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [127.0048, 37.5326]
+      },
+      "properties": {
+        "name": "이태원",
+        "category": "문화",
+        "type": "상권",
+        "score": 87,
+        "address": "서울특별시 용산구 이태원로",
+        "description": "글로벌 다문화 거리"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [127.0082, 37.5133]
+      },
+      "properties": {
+        "name": "한강공원",
+        "category": "공원",
+        "type": "휴식공간",
+        "score": 86,
+        "address": "서울특별시 용산구 이촌동",
+        "description": "한강변 시민 공원"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [126.9523, 37.4848]
+      },
+      "properties": {
+        "name": "노량진수산시장",
+        "category": "상업",
+        "type": "시장",
+        "score": 80,
+        "address": "서울특별시 동작구 노량진로 674",
+        "description": "서울 최대 수산물 시장"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [127.1027, 37.4020]
+      },
+      "properties": {
+        "name": "판교테크노밸리",
+        "category": "산업",
+        "type": "IT단지",
+        "score": 93,
+        "address": "경기도 성남시 분당구 판교역로",
+        "description": "한국의 실리콘밸리"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [126.9810, 37.5662]
+      },
+      "properties": {
+        "name": "남대문시장",
+        "category": "상업",
+        "type": "전통시장",
+        "score": 84,
+        "address": "서울특별시 중구 남대문시장4길 21",
+        "description": "600년 전통 시장"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [126.9996, 37.5796]
+      },
+      "properties": {
+        "name": "창덕궁",
+        "category": "관광",
+        "type": "문화재",
+        "score": 90,
+        "address": "서울특별시 종로구 율곡로 99",
+        "description": "유네스코 세계문화유산"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [127.0060, 37.5219]
+      },
+      "properties": {
+        "name": "국립중앙박물관",
+        "category": "문화",
+        "type": "박물관",
+        "score": 88,
+        "address": "서울특별시 용산구 서빙고로 137",
+        "description": "한국 역사와 문화 보물창고"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [126.9536, 37.5789]
+      },
+      "properties": {
+        "name": "독립문",
+        "category": "관광",
+        "type": "기념물",
+        "score": 75,
+        "address": "서울특별시 서대문구 통일로 251",
+        "description": "대한민국 독립 상징"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [127.0470, 37.5661]
+      },
+      "properties": {
+        "name": "건대입구역",
+        "category": "문화",
+        "type": "상권",
+        "score": 83,
+        "address": "서울특별시 광진구 능동로",
+        "description": "대학가 핫플레이스"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [126.9895, 37.5945]
+      },
+      "properties": {
+        "name": "북촌한옥마을",
+        "category": "관광",
+        "type": "전통마을",
+        "score": 89,
+        "address": "서울특별시 종로구 계동길 37",
+        "description": "전통 한옥 보존 지역"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [127.0594, 37.5143]
+      },
+      "properties": {
+        "name": "삼성역",
+        "category": "교통",
+        "type": "지하철역",
+        "score": 92,
+        "address": "서울특별시 강남구 영동대로 513",
+        "description": "강남 비즈니스 중심"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [126.9259, 37.5274]
+      },
+      "properties": {
+        "name": "당산역",
+        "category": "교통",
+        "type": "지하철역",
+        "score": 78,
+        "address": "서울특별시 영등포구 당산로",
+        "description": "2호선 9호선 환승역"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [126.8895, 37.4784]
+      },
+      "properties": {
+        "name": "김포공항",
+        "category": "교통",
+        "type": "공항",
+        "score": 91,
+        "address": "서울특별시 강서구 하늘길 38",
+        "description": "국내선 전용 공항"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [127.1054, 37.5407]
+      },
+      "properties": {
+        "name": "잠실종합운동장",
+        "category": "스포츠",
+        "type": "경기장",
+        "score": 85,
+        "address": "서울특별시 송파구 올림픽로 25",
+        "description": "88올림픽 주경기장"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [127.0841, 37.5013]
+      },
+      "properties": {
+        "name": "선릉역",
+        "category": "교통",
+        "type": "지하철역",
+        "score": 81,
+        "address": "서울특별시 강남구 테헤란로",
+        "description": "테헤란로 IT밸리 입구"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [126.9652, 37.5408]
+      },
+      "properties": {
+        "name": "용산전자상가",
+        "category": "상업",
+        "type": "전자상가",
+        "score": 79,
+        "address": "서울특별시 용산구 한강대로",
+        "description": "전자제품 전문 쇼핑몰"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [127.0017, 37.5985]
+      },
+      "properties": {
+        "name": "성균관",
+        "category": "문화",
+        "type": "문화재",
+        "score": 77,
+        "address": "서울특별시 종로구 성균관로 25-2",
+        "description": "조선시대 최고 교육기관"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [126.9354, 37.5509]
+      },
+      "properties": {
+        "name": "여의도 IFC몰",
+        "category": "상업",
+        "type": "쇼핑몰",
+        "score": 86,
+        "address": "서울특별시 영등포구 국제금융로 10",
+        "description": "프리미엄 쇼핑몰"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [127.1083, 37.5220]
+      },
+      "properties": {
+        "name": "석촌호수",
+        "category": "공원",
+        "type": "호수공원",
+        "score": 84,
+        "address": "서울특별시 송파구 송파동",
+        "description": "롯데타워가 보이는 호수"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [126.9895, 37.5509]
+      },
+      "properties": {
+        "name": "명동거리",
+        "category": "상업",
+        "type": "쇼핑거리",
+        "score": 93,
+        "address": "서울특별시 중구 명동길",
+        "description": "서울 최대 쇼핑 관광지"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [127.0437, 37.4954]
+      },
+      "properties": {
+        "name": "양재역",
+        "category": "교통",
+        "type": "지하철역",
+        "score": 76,
+        "address": "서울특별시 서초구 강남대로",
+        "description": "신분당선 환승역"
+      }
+    }
+  ]
+}
