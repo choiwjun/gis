@@ -30,6 +30,7 @@ app.route('/api/features', features)
 app.route('/api/styles', styles)
 app.route('/api/export', exportRoute)
 app.route('/api/users', users)
+app.route('/api/admin/users', users)
 
 // Health check
 app.get('/api/health', (c) => {
@@ -55,11 +56,10 @@ app.get('/', (c) => {
         </style>
     </head>
     <body>
-        <div id="root"></div>
+        <div id="app"></div>
         
         <script src="https://unpkg.com/maplibre-gl@4.1.2/dist/maplibre-gl.js"></script>
-        <script src="/static/advanced.js"></script>
-        <script type="module" src="/static/app.js"></script>
+        <script src="/static/app.js"></script>
     </body>
     </html>
   `)

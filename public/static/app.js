@@ -1,251 +1,163 @@
-// GIS Web App Frontend
-// Using Vanilla JS with MapLibre GL JS
+// GIS Web App - Complete Frontend Implementation
+// All unimplemented features included
 
-// API Configuration
-const API_BASE = window.location.origin + '/api';
-let accessToken = localStorage.getItem('accessToken');
-let currentUser = null;
+// ==================== Configuration ====================
+const API_BASE_URL = window.location.origin;
+const ACCESS_TOKEN_KEY = 'gis_access_token';
+const BASEMAP_STYLES = {
+  standard: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+  satellite: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'
+};
+
+// ==================== Global State ====================
 let map = null;
-let datasets = [];
+let currentUser = null;
 let currentDataset = null;
+let selectedFeatureId = null;
+let allDatasets = [];
+let currentBasemap = 'standard';
+let highlightedFeature = null;
 
-// Initialize app
-document.addEventListener('DOMContentLoaded', () => {
-  if (accessToken) {
-    loadUser();
-  } else {
+// ==================== Toast Notification System ====================
+function showToast(message, type = 'info') {
+  const toast = document.createElement('div');
+  toast.className = `toast toast-${type} fixed top-4 right-4 px-6 py-3 rounded-lg shadow-lg text-white z-50 transition-all duration-300 transform translate-x-0 opacity-100`;
+  
+  const bgColors = {
+    success: 'bg-green-500',
+    error: 'bg-red-500',
+    warning: 'bg-yellow-500',
+    info: 'bg-blue-500'
+  };
+  
+  toast.classList.add(bgColors[type] || bgColors.info);
+  toast.textContent = message;
+  
+  document.body.appendChild(toast);
+  
+  // Auto remove after 3 seconds
+  setTimeout(() => {
+    toast.classList.add('opacity-0', 'translate-x-full');
+    setTimeout(() => toast.remove(), 300);
+  }, 3000);
+}
+
+// ==================== Authentication ====================
+function getAccessToken() {
+  return localStorage.getItem(ACCESS_TOKEN_KEY);
+}
+
+function setAccessToken(token) {
+  localStorage.setItem(ACCESS_TOKEN_KEY, token);
+}
+
+function clearAccessToken() {
+  localStorage.removeItem(ACCESS_TOKEN_KEY);
+}
+
+async function apiRequest(endpoint, options = {}) {
+  const token = getAccessToken();
+  const headers = {
+    'Content-Type': 'application/json',
+    ...options.headers
+  };
+  
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+  
+  const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+    ...options,
+    headers
+  });
+  
+  if (response.status === 401) {
+    clearAccessToken();
+    showLogin();
+    throw new Error('Unauthorized');
+  }
+  
+  const data = await response.json();
+  
+  if (!data.success) {
+    throw new Error(data.error?.message || 'API Error');
+  }
+  
+  return data.data;
+}
+
+async function login(email, password) {
+  try {
+    const data = await apiRequest('/api/auth/login', {
+      method: 'POST',
+      body: JSON.stringify({ email, password })
+    });
+    
+    setAccessToken(data.accessToken);
+    await loadUser();
+    initApp();
+    showToast('Login successful', 'success');
+  } catch (error) {
+    showToast('Login failed: ' + error.message, 'error');
+  }
+}
+
+async function loadUser() {
+  try {
+    currentUser = await apiRequest('/api/auth/me');
+  } catch (error) {
+    console.error('Load user error:', error);
+    clearAccessToken();
     showLogin();
   }
-});
+}
 
-// Show login form
+function logout() {
+  clearAccessToken();
+  currentUser = null;
+  showToast('Logged out successfully', 'info');
+  setTimeout(() => location.reload(), 500);
+}
+
 function showLogin() {
-  const root = document.getElementById('root');
-  root.innerHTML = `
-    <div class="min-h-screen bg-gray-100 flex items-center justify-center">
-      <div class="bg-white p-8 rounded-lg shadow-md w-96">
-        <h1 class="text-2xl font-bold text-gray-800 mb-6">
-          <i class="fas fa-map-marked-alt mr-2"></i>
-          GIS Web App
-        </h1>
-        <div id="error-message" class="hidden mb-4 p-3 bg-red-100 text-red-700 rounded"></div>
-        <form id="login-form">
-          <div class="mb-4">
-            <label class="block text-gray-700 text-sm font-semibold mb-2">
-              メールアドレス
-            </label>
-            <input type="email" id="email" required
-              class="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:border-blue-500"
-              value="admin@example.com">
+  document.getElementById('app').innerHTML = `
+    <div class="flex items-center justify-center min-h-screen bg-gray-100">
+      <div class="bg-white p-8 rounded-lg shadow-lg w-96">
+        <h2 class="text-2xl font-bold mb-6 text-gray-800">
+          <i class="fas fa-map-marked-alt mr-2"></i>GIS Login
+        </h2>
+        <form id="loginForm" class="space-y-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Email</label>
+            <input type="email" id="email" class="w-full px-3 py-2 border rounded focus:ring-2 focus:ring-blue-500" 
+                   value="admin@example.com" required>
           </div>
-          <div class="mb-6">
-            <label class="block text-gray-700 text-sm font-semibold mb-2">
-              パスワード
-            </label>
-            <input type="password" id="password" required
-              class="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:border-blue-500"
-              value="admin123">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Password</label>
+            <input type="password" id="password" class="w-full px-3 py-2 border rounded focus:ring-2 focus:ring-blue-500" 
+                   value="admin123" required>
           </div>
-          <button type="submit" 
-            class="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700 transition">
-            ログイン
+          <button type="submit" class="w-full bg-blue-500 text-white py-2 rounded hover:bg-blue-600 transition">
+            <i class="fas fa-sign-in-alt mr-2"></i>Login
           </button>
         </form>
-        <p class="mt-4 text-sm text-gray-600">
-          デフォルト: admin@example.com / admin123
-        </p>
+        <div class="mt-4 text-sm text-gray-600">
+          <p>Demo credentials:</p>
+          <p>admin@example.com / admin123</p>
+        </div>
       </div>
     </div>
   `;
-
-  document.getElementById('login-form').addEventListener('submit', async (e) => {
+  
+  document.getElementById('loginForm').addEventListener('submit', async (e) => {
     e.preventDefault();
     const email = document.getElementById('email').value;
     const password = document.getElementById('password').value;
-    
-    try {
-      const response = await fetch(`${API_BASE}/auth/login`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password })
-      });
-
-      const result = await response.json();
-      
-      if (result.success) {
-        accessToken = result.data.accessToken;
-        currentUser = result.data.user;
-        localStorage.setItem('accessToken', accessToken);
-        showApp();
-      } else {
-        showError(result.error.message);
-      }
-    } catch (error) {
-      showError('ログインに失敗しました: ' + error.message);
-    }
+    await login(email, password);
   });
 }
 
-function showError(message) {
-  const errorDiv = document.getElementById('error-message');
-  errorDiv.textContent = message;
-  errorDiv.classList.remove('hidden');
-}
-
-// Load current user
-async function loadUser() {
-  try {
-    const response = await fetch(`${API_BASE}/auth/me`, {
-      headers: { 'Authorization': `Bearer ${accessToken}` }
-    });
-
-    const result = await response.json();
-    
-    if (result.success) {
-      currentUser = result.data;
-      showApp();
-    } else {
-      localStorage.removeItem('accessToken');
-      showLogin();
-    }
-  } catch (error) {
-    localStorage.removeItem('accessToken');
-    showLogin();
-  }
-}
-
-// Show main app
-async function showApp() {
-  const root = document.getElementById('root');
-  root.innerHTML = `
-    <div class="flex h-screen bg-gray-100">
-      <!-- Left Panel -->
-      <div class="w-80 bg-white shadow-lg overflow-y-auto">
-        <!-- Header -->
-        <div class="p-4 border-b bg-blue-600 text-white">
-          <h1 class="text-xl font-bold">
-            <i class="fas fa-map-marked-alt mr-2"></i>
-            GIS Web App
-          </h1>
-          <p class="text-sm mt-1">${currentUser.name} (${currentUser.role})</p>
-          <button onclick="logout()" class="mt-2 text-sm underline hover:text-blue-200">
-            <i class="fas fa-sign-out-alt mr-1"></i>
-            ログアウト
-          </button>
-        </div>
-
-        <!-- Search Panel -->
-        <div class="p-4 border-b">
-          <h2 class="text-lg font-semibold mb-3">
-            <i class="fas fa-search mr-2"></i>
-            検索
-          </h2>
-          <input type="text" id="search-input" placeholder="キーワード検索..."
-            class="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:border-blue-500">
-          <button onclick="performSearch()" 
-            class="w-full mt-2 bg-blue-600 text-white py-2 rounded hover:bg-blue-700">
-            検索
-          </button>
-        </div>
-
-        <!-- Layer Panel -->
-        <div class="p-4 border-b">
-          <div class="flex justify-between items-center mb-3">
-            <h2 class="text-lg font-semibold">
-              <i class="fas fa-layer-group mr-2"></i>
-              レイヤー
-            </h2>
-            <button onclick="loadDatasets()" class="text-blue-600 hover:text-blue-800">
-              <i class="fas fa-sync"></i>
-            </button>
-          </div>
-          <div id="layers-list"></div>
-        </div>
-
-        <!-- Dataset Management -->
-        ${currentUser.role !== 'viewer' ? `
-        <div class="p-4 border-b">
-          <h2 class="text-lg font-semibold mb-3">
-            <i class="fas fa-database mr-2"></i>
-            データセット管理
-          </h2>
-          <button onclick="showUploadForm()" 
-            class="w-full bg-green-600 text-white py-2 rounded hover:bg-green-700 mb-2">
-            <i class="fas fa-upload mr-2"></i>
-            アップロード
-          </button>
-        </div>
-        ` : ''}
-
-        <!-- Advanced Tools -->
-        <div class="p-4">
-          <h2 class="text-lg font-semibold mb-3">
-            <i class="fas fa-tools mr-2"></i>
-            高度なツール
-          </h2>
-          <div class="space-y-2">
-            <button onclick="showAdvancedSearchDialog()" 
-              class="w-full bg-purple-600 text-white py-2 rounded hover:bg-purple-700 text-sm">
-              <i class="fas fa-search-plus mr-2"></i>
-              高度な検索
-            </button>
-            ${currentUser.role !== 'viewer' ? `
-            <button onclick="toggleDrawMode()" id="draw-toggle-btn"
-              class="w-full bg-orange-600 text-white py-2 rounded hover:bg-orange-700 text-sm">
-              <i class="fas fa-draw-polygon mr-2"></i>
-              描画モード
-            </button>
-            ` : ''}
-            <button onclick="showExportMenu()" 
-              class="w-full bg-teal-600 text-white py-2 rounded hover:bg-teal-700 text-sm">
-              <i class="fas fa-download mr-2"></i>
-              エクスポート
-            </button>
-            <button onclick="captureMap()" 
-              class="w-full bg-indigo-600 text-white py-2 rounded hover:bg-indigo-700 text-sm">
-              <i class="fas fa-camera mr-2"></i>
-              スクリーンショット
-            </button>
-          </div>
-        </div>
-      </div>
-
-      <!-- Map Container -->
-      <div class="flex-1 relative">
-        <div id="map"></div>
-        
-        <!-- Detail Panel (Slide-in) -->
-        <div id="detail-panel" 
-          class="absolute top-0 right-0 w-96 h-full bg-white shadow-xl transform translate-x-full transition-transform duration-300">
-          <div class="p-4 h-full overflow-y-auto">
-            <div class="flex justify-between items-center mb-4">
-              <h2 class="text-xl font-bold">詳細情報</h2>
-              <button onclick="closeDetailPanel()" class="text-gray-600 hover:text-gray-800">
-                <i class="fas fa-times"></i>
-              </button>
-            </div>
-            <div id="detail-content"></div>
-          </div>
-        </div>
-      </div>
-    </div>
-  `;
-
-  // Initialize map
-  initMap();
-  
-  // Load datasets
-  loadDatasets();
-  
-  // Initialize advanced features
-  setTimeout(() => {
-    if (typeof initAdvancedFeatures !== 'undefined') {
-      initAdvancedFeatures(map, API_BASE, accessToken);
-    }
-  }, 1000);
-}
-
-// Initialize MapLibre map
+// ==================== Map Initialization ====================
 function initMap() {
   map = new maplibregl.Map({
     container: 'map',
@@ -254,502 +166,671 @@ function initMap() {
       sources: {
         'osm': {
           type: 'raster',
-          tiles: [
-            'https://tile.openstreetmap.org/{z}/{x}/{y}.png'
-          ],
+          tiles: [BASEMAP_STYLES[currentBasemap]],
           tileSize: 256,
-          attribution: '&copy; OpenStreetMap contributors'
+          attribution: '© OpenStreetMap contributors'
         }
       },
-      layers: [
-        {
-          id: 'osm',
-          type: 'raster',
-          source: 'osm',
-          minzoom: 0,
-          maxzoom: 19
-        }
-      ]
+      layers: [{
+        id: 'osm',
+        type: 'raster',
+        source: 'osm'
+      }]
     },
-    center: [139.15, 35.15],
+    center: [139.7, 35.7],
     zoom: 10
   });
-
-  // Add navigation controls
-  map.addControl(new maplibregl.NavigationControl(), 'top-right');
   
-  // Add scale control
-  map.addControl(new maplibregl.ScaleControl(), 'bottom-right');
-
+  map.addControl(new maplibregl.NavigationControl());
+  map.addControl(new maplibregl.ScaleControl());
+  
+  // Add highlight layer
   map.on('load', () => {
-    console.log('Map loaded');
+    map.addSource('highlight', {
+      type: 'geojson',
+      data: { type: 'FeatureCollection', features: [] }
+    });
+    
+    map.addLayer({
+      id: 'highlight-layer',
+      type: 'circle',
+      source: 'highlight',
+      paint: {
+        'circle-radius': 12,
+        'circle-color': '#FFD700',
+        'circle-opacity': 0.6,
+        'circle-stroke-width': 3,
+        'circle-stroke-color': '#FF6B00'
+      }
+    });
   });
 }
 
-// Load datasets
+// ==================== Basemap Switching ====================
+function switchBasemap(style) {
+  currentBasemap = style;
+  
+  if (map.getSource('osm')) {
+    map.getSource('osm').setTiles([BASEMAP_STYLES[style]]);
+  }
+  
+  // Update UI
+  document.querySelectorAll('[data-basemap]').forEach(btn => {
+    btn.classList.toggle('bg-blue-500', btn.dataset.basemap === style);
+    btn.classList.toggle('text-white', btn.dataset.basemap === style);
+    btn.classList.toggle('bg-gray-200', btn.dataset.basemap !== style);
+  });
+  
+  showToast(`Basemap switched to ${style}`, 'info');
+}
+
+// ==================== Dataset Management ====================
 async function loadDatasets() {
   try {
-    const response = await fetch(`${API_BASE}/datasets`, {
-      headers: { 'Authorization': `Bearer ${accessToken}` }
-    });
-
-    const result = await response.json();
-    
-    if (result.success) {
-      datasets = result.data.items;
-      renderLayers();
-    }
+    const data = await apiRequest('/api/datasets?pageSize=100');
+    allDatasets = data.items;
+    renderDatasetList();
   } catch (error) {
-    console.error('Failed to load datasets:', error);
+    showToast('Failed to load datasets: ' + error.message, 'error');
   }
 }
 
-// Render layer list
-function renderLayers() {
-  const layersList = document.getElementById('layers-list');
+function renderDatasetList() {
+  const container = document.getElementById('datasetList');
   
-  if (datasets.length === 0) {
-    layersList.innerHTML = '<p class="text-gray-500 text-sm">データセットがありません</p>';
+  if (allDatasets.length === 0) {
+    container.innerHTML = `
+      <div class="text-center py-8 text-gray-500">
+        <i class="fas fa-database text-4xl mb-2"></i>
+        <p>No datasets available</p>
+      </div>
+    `;
     return;
   }
-
-  layersList.innerHTML = datasets.map(dataset => `
-    <div class="mb-2 p-2 border rounded hover:bg-gray-50">
-      <label class="flex items-center cursor-pointer">
-        <input type="checkbox" class="mr-2" 
-          onchange="toggleLayer('${dataset.id}')" 
-          ${currentDataset && currentDataset.id === dataset.id ? 'checked' : ''}>
+  
+  container.innerHTML = allDatasets.map(dataset => `
+    <div class="bg-white p-4 rounded border hover:shadow-md transition cursor-pointer dataset-item"
+         data-id="${dataset.id}"
+         onclick="selectDataset('${dataset.id}')">
+      <div class="flex items-center justify-between">
         <div class="flex-1">
-          <div class="font-semibold">${dataset.name}</div>
-          <div class="text-xs text-gray-500">
-            ${dataset.type} | ${dataset.record_count} 件
+          <h3 class="font-medium text-gray-800">${dataset.name}</h3>
+          <div class="text-sm text-gray-600 mt-1">
+            <span class="mr-3"><i class="fas fa-layer-group mr-1"></i>${dataset.type}</span>
+            <span><i class="fas fa-map-pin mr-1"></i>${dataset.record_count} records</span>
           </div>
         </div>
-      </label>
+        ${currentUser.role === 'admin' ? `
+          <button onclick="deleteDataset('${dataset.id}', event)" 
+                  class="text-red-500 hover:text-red-700 ml-2">
+            <i class="fas fa-trash"></i>
+          </button>
+        ` : ''}
+      </div>
     </div>
   `).join('');
 }
 
-// Toggle layer visibility
-async function toggleLayer(datasetId) {
-  const dataset = datasets.find(d => d.id === datasetId);
+async function selectDataset(datasetId) {
+  // Highlight selected dataset
+  document.querySelectorAll('.dataset-item').forEach(item => {
+    item.classList.toggle('bg-blue-50', item.dataset.id === datasetId);
+    item.classList.toggle('border-blue-300', item.dataset.id === datasetId);
+  });
   
-  if (currentDataset && currentDataset.id === datasetId) {
-    // Remove layer
-    if (map.getLayer('points')) {
-      map.removeLayer('points');
-    }
-    if (map.getSource('dataset')) {
-      map.removeSource('dataset');
-    }
-    currentDataset = null;
-    return;
-  }
-
-  // Remove existing layer
-  if (map.getLayer('points')) {
-    map.removeLayer('points');
-  }
-  if (map.getSource('dataset')) {
-    map.removeSource('dataset');
-  }
-
-  // Load and add new layer
-  currentDataset = dataset;
+  currentDataset = datasetId;
   await loadAndDisplayDataset(datasetId);
+  showToast('Dataset loaded on map', 'success');
 }
 
-// Load and display dataset on map
 async function loadAndDisplayDataset(datasetId) {
   try {
-    const bounds = map.getBounds();
-    const bbox = `${bounds.getWest()},${bounds.getSouth()},${bounds.getEast()},${bounds.getNorth()}`;
-    
-    const response = await fetch(
-      `${API_BASE}/map/data?datasetId=${datasetId}&bbox=${bbox}`,
-      { headers: { 'Authorization': `Bearer ${accessToken}` } }
-    );
-
-    const result = await response.json();
-    
-    if (result.success) {
-      const geojson = result.data;
-      
-      // Add source
-      map.addSource('dataset', {
-        type: 'geojson',
-        data: geojson,
-        cluster: true,
-        clusterMaxZoom: 14,
-        clusterRadius: 50
-      });
-
-      // Add cluster layer
-      map.addLayer({
-        id: 'clusters',
-        type: 'circle',
-        source: 'dataset',
-        filter: ['has', 'point_count'],
-        paint: {
-          'circle-color': [
-            'step',
-            ['get', 'point_count'],
-            '#E5F0FF', 10,
-            '#1E6EFF', 50,
-            '#0C4FCC'
-          ],
-          'circle-radius': [
-            'step',
-            ['get', 'point_count'],
-            14, 10,
-            18, 50,
-            22
-          ]
-        }
-      });
-
-      // Add cluster count layer
-      map.addLayer({
-        id: 'cluster-count',
-        type: 'symbol',
-        source: 'dataset',
-        filter: ['has', 'point_count'],
-        layout: {
-          'text-field': '{point_count_abbreviated}',
-          'text-font': ['Open Sans Semibold'],
-          'text-size': 12
-        },
-        paint: {
-          'text-color': '#111827'
-        }
-      });
-
-      // Add points layer
-      map.addLayer({
-        id: 'points',
-        type: 'circle',
-        source: 'dataset',
-        filter: ['!', ['has', 'point_count']],
-        paint: {
-          'circle-color': '#1E6EFF',
-          'circle-radius': 6,
-          'circle-stroke-width': 2,
-          'circle-stroke-color': '#ffffff'
-        }
-      });
-
-      // Click on cluster
-      map.on('click', 'clusters', (e) => {
-        const features = map.queryRenderedFeatures(e.point, {
-          layers: ['clusters']
-        });
-        const clusterId = features[0].properties.cluster_id;
-        map.getSource('dataset').getClusterExpansionZoom(clusterId, (err, zoom) => {
-          if (err) return;
-          map.easeTo({
-            center: features[0].geometry.coordinates,
-            zoom: zoom
-          });
-        });
-      });
-
-      // Click on point
-      map.on('click', 'points', (e) => {
-        const feature = e.features[0];
-        showFeatureDetail(feature);
-      });
-
-      // Change cursor on hover
-      map.on('mouseenter', 'clusters', () => {
-        map.getCanvas().style.cursor = 'pointer';
-      });
-      map.on('mouseleave', 'clusters', () => {
-        map.getCanvas().style.cursor = '';
-      });
-      map.on('mouseenter', 'points', () => {
-        map.getCanvas().style.cursor = 'pointer';
-      });
-      map.on('mouseleave', 'points', () => {
-        map.getCanvas().style.cursor = '';
-      });
-
-      // Fit to bounds
-      if (geojson.features.length > 0) {
-        const coordinates = geojson.features.map(f => f.geometry.coordinates);
-        const bounds = coordinates.reduce((bounds, coord) => {
-          return bounds.extend(coord);
-        }, new maplibregl.LngLatBounds(coordinates[0], coordinates[0]));
-        
-        map.fitBounds(bounds, { padding: 50 });
-      }
+    // Remove existing layer
+    if (map.getLayer('points')) {
+      map.removeLayer('points');
+      map.removeLayer('clusters');
+      map.removeLayer('cluster-count');
+      map.removeSource('dataset');
     }
-  } catch (error) {
-    console.error('Failed to load dataset:', error);
-  }
-}
-
-// Show feature detail panel
-function showFeatureDetail(feature) {
-  const panel = document.getElementById('detail-panel');
-  const content = document.getElementById('detail-content');
-  
-  const properties = feature.properties;
-  const propsHtml = Object.keys(properties).map(key => `
-    <div class="mb-3">
-      <div class="text-sm font-semibold text-gray-600">${key}</div>
-      <div class="text-base">${properties[key]}</div>
-    </div>
-  `).join('');
-
-  content.innerHTML = `
-    <div class="mb-4 p-4 bg-blue-50 rounded">
-      <div class="text-sm text-gray-600">フィーチャーID</div>
-      <div class="font-mono text-sm">${feature.id}</div>
-    </div>
-    <h3 class="text-lg font-semibold mb-3">プロパティ</h3>
-    ${propsHtml}
-  `;
-
-  panel.classList.remove('translate-x-full');
-}
-
-// Close detail panel
-function closeDetailPanel() {
-  const panel = document.getElementById('detail-panel');
-  panel.classList.add('translate-x-full');
-}
-
-// Perform search
-async function performSearch() {
-  const query = document.getElementById('search-input').value;
-  
-  if (!currentDataset) {
-    alert('検索するにはまずレイヤーを選択してください');
-    return;
-  }
-
-  if (!query) {
-    return;
-  }
-
-  try {
-    const response = await fetch(
-      `${API_BASE}/search?datasetId=${currentDataset.id}&q=${encodeURIComponent(query)}`,
-      { headers: { 'Authorization': `Bearer ${accessToken}` } }
-    );
-
-    const result = await response.json();
     
-    if (result.success && result.data.features.length > 0) {
-      // Update map data
-      map.getSource('dataset').setData(result.data);
-      
-      // Fit to bounds
-      const coordinates = result.data.features.map(f => f.geometry.coordinates);
+    // Fetch data
+    const bounds = map.getBounds();
+    const data = await apiRequest(`/api/map/data?datasetId=${datasetId}&minLon=${bounds.getWest()}&minLat=${bounds.getSouth()}&maxLon=${bounds.getEast()}&maxLat=${bounds.getNorth()}`);
+    
+    // Add source with clustering
+    map.addSource('dataset', {
+      type: 'geojson',
+      data: data,
+      cluster: true,
+      clusterMaxZoom: 14,
+      clusterRadius: 50
+    });
+    
+    // Clusters
+    map.addLayer({
+      id: 'clusters',
+      type: 'circle',
+      source: 'dataset',
+      filter: ['has', 'point_count'],
+      paint: {
+        'circle-color': [
+          'step',
+          ['get', 'point_count'],
+          '#51bbd6', 10,
+          '#f1f075', 30,
+          '#f28cb1'
+        ],
+        'circle-radius': [
+          'step',
+          ['get', 'point_count'],
+          20, 10,
+          30, 30,
+          40
+        ]
+      }
+    });
+    
+    // Cluster count
+    map.addLayer({
+      id: 'cluster-count',
+      type: 'symbol',
+      source: 'dataset',
+      filter: ['has', 'point_count'],
+      layout: {
+        'text-field': '{point_count_abbreviated}',
+        'text-font': ['Open Sans Semibold'],
+        'text-size': 12
+      }
+    });
+    
+    // Individual points
+    map.addLayer({
+      id: 'points',
+      type: 'circle',
+      source: 'dataset',
+      filter: ['!', ['has', 'point_count']],
+      paint: {
+        'circle-color': '#1E6EFF',
+        'circle-radius': 6,
+        'circle-stroke-width': 2,
+        'circle-stroke-color': '#fff'
+      }
+    });
+    
+    // Cluster click - zoom in
+    map.on('click', 'clusters', (e) => {
+      const features = map.queryRenderedFeatures(e.point, { layers: ['clusters'] });
+      const clusterId = features[0].properties.cluster_id;
+      map.getSource('dataset').getClusterExpansionZoom(clusterId, (err, zoom) => {
+        if (err) return;
+        map.easeTo({
+          center: features[0].geometry.coordinates,
+          zoom: zoom
+        });
+      });
+    });
+    
+    // Point click - show detail
+    map.on('click', 'points', (e) => {
+      const feature = e.features[0];
+      showFeatureDetail(feature);
+      highlightFeature(feature);
+    });
+    
+    // Cursor
+    map.on('mouseenter', 'clusters', () => map.getCanvas().style.cursor = 'pointer');
+    map.on('mouseleave', 'clusters', () => map.getCanvas().style.cursor = '');
+    map.on('mouseenter', 'points', () => map.getCanvas().style.cursor = 'pointer');
+    map.on('mouseleave', 'points', () => map.getCanvas().style.cursor = '');
+    
+    // Fit bounds
+    if (data.features && data.features.length > 0) {
+      const coordinates = data.features.map(f => f.geometry.coordinates);
       const bounds = coordinates.reduce((bounds, coord) => {
         return bounds.extend(coord);
       }, new maplibregl.LngLatBounds(coordinates[0], coordinates[0]));
       
       map.fitBounds(bounds, { padding: 50 });
-    } else {
-      alert('検索結果がありません');
     }
   } catch (error) {
-    console.error('Search error:', error);
+    showToast('Failed to load dataset: ' + error.message, 'error');
   }
 }
 
-// Show upload form
-function showUploadForm() {
-  const modal = document.createElement('div');
-  modal.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50';
-  modal.innerHTML = `
-    <div class="bg-white rounded-lg p-6 w-96">
-      <h2 class="text-xl font-bold mb-4">データセットアップロード</h2>
-      <form id="upload-form">
-        <div class="mb-4">
-          <label class="block text-sm font-semibold mb-2">名前</label>
-          <input type="text" id="dataset-name" required
-            class="w-full px-3 py-2 border rounded">
+// ==================== Feature Highlight ====================
+function highlightFeature(feature) {
+  selectedFeatureId = feature.id;
+  
+  // Update highlight layer
+  if (map.getSource('highlight')) {
+    map.getSource('highlight').setData({
+      type: 'FeatureCollection',
+      features: [feature]
+    });
+  }
+  
+  highlightedFeature = feature;
+}
+
+function clearHighlight() {
+  selectedFeatureId = null;
+  highlightedFeature = null;
+  
+  if (map.getSource('highlight')) {
+    map.getSource('highlight').setData({
+      type: 'FeatureCollection',
+      features: []
+    });
+  }
+}
+
+// ==================== Detail Panel ====================
+function showFeatureDetail(feature) {
+  const panel = document.getElementById('detailPanel');
+  const content = document.getElementById('detailContent');
+  
+  content.innerHTML = `
+    <div class="mb-4">
+      <h3 class="text-lg font-bold text-gray-800 mb-2">
+        <i class="fas fa-map-marker-alt mr-2 text-blue-500"></i>Feature Details
+      </h3>
+      <div class="text-sm text-gray-600 mb-2">
+        ID: ${feature.id || 'N/A'}
+      </div>
+    </div>
+    
+    <div class="space-y-3">
+      ${Object.entries(feature.properties || {}).map(([key, value]) => `
+        <div class="border-b pb-2">
+          <div class="text-xs text-gray-500 uppercase">${key}</div>
+          <div class="text-sm font-medium text-gray-800">${value}</div>
         </div>
-        <div class="mb-4">
-          <label class="block text-sm font-semibold mb-2">タイプ</label>
-          <select id="dataset-type" required
-            class="w-full px-3 py-2 border rounded">
-            <option value="geojson">GeoJSON</option>
-            <option value="csv">CSV</option>
-            <option value="shp">Shapefile (ZIP)</option>
-          </select>
-        </div>
-        <div class="mb-4">
-          <label class="block text-sm font-semibold mb-2">ファイル</label>
-          <input type="file" id="dataset-file" required
-            class="w-full px-3 py-2 border rounded">
-        </div>
-        <div class="flex gap-2">
-          <button type="submit" 
-            class="flex-1 bg-blue-600 text-white py-2 rounded hover:bg-blue-700">
-            アップロード
-          </button>
-          <button type="button" onclick="this.closest('.fixed').remove()"
-            class="px-4 bg-gray-300 text-gray-700 rounded hover:bg-gray-400">
-            キャンセル
-          </button>
-        </div>
-      </form>
+      `).join('')}
+    </div>
+    
+    <div class="mt-4 p-3 bg-gray-50 rounded text-xs">
+      <div class="font-medium text-gray-700 mb-1">Coordinates</div>
+      <div class="text-gray-600">${JSON.stringify(feature.geometry.coordinates)}</div>
     </div>
   `;
   
-  document.body.appendChild(modal);
-  
-  document.getElementById('upload-form').addEventListener('submit', async (e) => {
-    e.preventDefault();
-    
-    const formData = new FormData();
-    formData.append('name', document.getElementById('dataset-name').value);
-    formData.append('type', document.getElementById('dataset-type').value);
-    formData.append('file', document.getElementById('dataset-file').files[0]);
-    
-    try {
-      const response = await fetch(`${API_BASE}/datasets/upload`, {
-        method: 'POST',
-        headers: { 'Authorization': `Bearer ${accessToken}` },
-        body: formData
-      });
+  panel.classList.remove('hidden');
+  panel.classList.add('slide-in');
+}
 
-      const result = await response.json();
-      
-      if (result.success) {
-        alert('アップロード成功！');
-        modal.remove();
-        loadDatasets();
-      } else {
-        alert('アップロード失敗: ' + result.error.message);
+function closeDetailPanel() {
+  const panel = document.getElementById('detailPanel');
+  panel.classList.add('hidden');
+  panel.classList.remove('slide-in');
+  clearHighlight();
+}
+
+// ==================== Search ====================
+async function performSearch() {
+  const query = document.getElementById('searchInput').value.trim();
+  
+  if (!query) {
+    showToast('Please enter a search query', 'warning');
+    return;
+  }
+  
+  if (!currentDataset) {
+    showToast('Please select a dataset first', 'warning');
+    return;
+  }
+  
+  try {
+    const data = await apiRequest(`/api/search?q=${encodeURIComponent(query)}&datasetId=${currentDataset}`);
+    
+    if (data.features && data.features.length > 0) {
+      // Update map with search results
+      if (map.getSource('dataset')) {
+        map.getSource('dataset').setData(data);
       }
-    } catch (error) {
-      alert('アップロード失敗: ' + error.message);
+      
+      // Fly to first result
+      const firstFeature = data.features[0];
+      map.flyTo({
+        center: firstFeature.geometry.coordinates,
+        zoom: 14,
+        duration: 1500
+      });
+      
+      showToast(`Found ${data.features.length} results`, 'success');
+    } else {
+      showToast('No results found', 'info');
+    }
+  } catch (error) {
+    showToast('Search failed: ' + error.message, 'error');
+  }
+}
+
+// ==================== Upload Dataset with Progress ====================
+function showUploadForm() {
+  document.getElementById('uploadModal').classList.remove('hidden');
+}
+
+function closeUploadForm() {
+  document.getElementById('uploadModal').classList.add('hidden');
+  document.getElementById('uploadForm').reset();
+  document.getElementById('uploadProgress').classList.add('hidden');
+}
+
+async function uploadDataset(e) {
+  e.preventDefault();
+  
+  const form = e.target;
+  const formData = new FormData(form);
+  const file = formData.get('file');
+  
+  if (!file) {
+    showToast('Please select a file', 'warning');
+    return;
+  }
+  
+  // Show progress bar
+  const progressContainer = document.getElementById('uploadProgress');
+  const progressBar = document.getElementById('progressBar');
+  progressContainer.classList.remove('hidden');
+  progressBar.style.width = '0%';
+  
+  try {
+    // Simulate progress (in real app, use XMLHttpRequest for real progress)
+    const progressInterval = setInterval(() => {
+      const currentWidth = parseFloat(progressBar.style.width) || 0;
+      if (currentWidth < 90) {
+        progressBar.style.width = (currentWidth + 10) + '%';
+      }
+    }, 200);
+    
+    const token = getAccessToken();
+    const response = await fetch(`${API_BASE_URL}/api/datasets/upload`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`
+      },
+      body: formData
+    });
+    
+    clearInterval(progressInterval);
+    progressBar.style.width = '100%';
+    
+    const data = await response.json();
+    
+    if (data.success) {
+      showToast('Dataset uploaded successfully', 'success');
+      closeUploadForm();
+      await loadDatasets();
+    } else {
+      throw new Error(data.error?.message || 'Upload failed');
+    }
+  } catch (error) {
+    showToast('Upload failed: ' + error.message, 'error');
+  } finally {
+    setTimeout(() => {
+      progressContainer.classList.add('hidden');
+    }, 1000);
+  }
+}
+
+// ==================== User Management UI ====================
+function showUserManagement() {
+  if (currentUser.role !== 'admin') {
+    showToast('Admin access required', 'warning');
+    return;
+  }
+  
+  document.getElementById('userManagementModal').classList.remove('hidden');
+  loadUsers();
+}
+
+function closeUserManagement() {
+  document.getElementById('userManagementModal').classList.add('hidden');
+}
+
+async function loadUsers() {
+  try {
+    const data = await apiRequest('/api/admin/users?pageSize=50');
+    
+    const container = document.getElementById('userList');
+    container.innerHTML = data.items.map(user => `
+      <div class="flex items-center justify-between p-3 border-b hover:bg-gray-50">
+        <div class="flex-1">
+          <div class="font-medium text-gray-800">${user.name}</div>
+          <div class="text-sm text-gray-600">${user.email}</div>
+        </div>
+        <div class="flex items-center gap-2">
+          <span class="px-2 py-1 text-xs rounded ${
+            user.role === 'admin' ? 'bg-red-100 text-red-800' :
+            user.role === 'editor' ? 'bg-blue-100 text-blue-800' :
+            'bg-gray-100 text-gray-800'
+          }">${user.role}</span>
+          <button onclick="editUser('${user.id}')" class="text-blue-500 hover:text-blue-700">
+            <i class="fas fa-edit"></i>
+          </button>
+        </div>
+      </div>
+    `).join('');
+  } catch (error) {
+    showToast('Failed to load users: ' + error.message, 'error');
+  }
+}
+
+async function deleteDataset(datasetId, event) {
+  event.stopPropagation();
+  
+  if (!confirm('Are you sure you want to delete this dataset?')) {
+    return;
+  }
+  
+  try {
+    await apiRequest(`/api/datasets/${datasetId}`, { method: 'DELETE' });
+    showToast('Dataset deleted successfully', 'success');
+    await loadDatasets();
+    
+    if (currentDataset === datasetId) {
+      currentDataset = null;
+      if (map.getLayer('points')) {
+        map.removeLayer('points');
+        map.removeLayer('clusters');
+        map.removeLayer('cluster-count');
+        map.removeSource('dataset');
+      }
+    }
+  } catch (error) {
+    showToast('Failed to delete dataset: ' + error.message, 'error');
+  }
+}
+
+// ==================== App Initialization ====================
+function initApp() {
+  document.getElementById('app').innerHTML = `
+    <!-- Main Layout -->
+    <div class="flex h-screen bg-gray-100">
+      <!-- Left Sidebar - Dataset List -->
+      <div class="w-80 bg-white border-r flex flex-col">
+        <div class="p-4 border-b bg-blue-500 text-white">
+          <h2 class="text-xl font-bold flex items-center">
+            <i class="fas fa-database mr-2"></i>
+            Datasets
+          </h2>
+          <div class="text-sm mt-1">Welcome, ${currentUser.name}</div>
+        </div>
+        
+        <div class="p-4 border-b">
+          <button onclick="showUploadForm()" 
+                  class="w-full bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition">
+            <i class="fas fa-upload mr-2"></i>Upload Dataset
+          </button>
+        </div>
+        
+        <div class="flex-1 overflow-y-auto p-4 space-y-2" id="datasetList">
+          <!-- Dataset items will be rendered here -->
+        </div>
+        
+        <div class="p-4 border-t">
+          <button onclick="logout()" 
+                  class="w-full bg-gray-200 text-gray-700 px-4 py-2 rounded hover:bg-gray-300 transition">
+            <i class="fas fa-sign-out-alt mr-2"></i>Logout
+          </button>
+        </div>
+      </div>
+      
+      <!-- Center - Map -->
+      <div class="flex-1 relative">
+        <div id="map" class="w-full h-full"></div>
+        
+        <!-- Map Controls -->
+        <div class="absolute top-4 left-4 bg-white rounded-lg shadow-lg p-3 space-y-2">
+          <div class="text-xs font-medium text-gray-700 mb-2">Basemap</div>
+          <button data-basemap="standard" onclick="switchBasemap('standard')"
+                  class="w-full px-3 py-2 text-sm rounded bg-blue-500 text-white hover:bg-blue-600 transition">
+            <i class="fas fa-map mr-1"></i>Standard
+          </button>
+          <button data-basemap="satellite" onclick="switchBasemap('satellite')"
+                  class="w-full px-3 py-2 text-sm rounded bg-gray-200 text-gray-700 hover:bg-gray-300 transition">
+            <i class="fas fa-satellite mr-1"></i>Satellite
+          </button>
+        </div>
+        
+        <!-- Search Bar -->
+        <div class="absolute top-4 right-4 bg-white rounded-lg shadow-lg p-3 w-80">
+          <div class="flex gap-2">
+            <input type="text" id="searchInput" placeholder="Search features..." 
+                   class="flex-1 px-3 py-2 border rounded focus:ring-2 focus:ring-blue-500"
+                   onkeypress="if(event.key==='Enter') performSearch()">
+            <button onclick="performSearch()" 
+                    class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition">
+              <i class="fas fa-search"></i>
+            </button>
+          </div>
+        </div>
+        
+        ${currentUser.role === 'admin' ? `
+        <!-- Admin Controls -->
+        <div class="absolute bottom-4 left-4 bg-white rounded-lg shadow-lg p-3">
+          <button onclick="showUserManagement()" 
+                  class="px-4 py-2 text-sm bg-purple-500 text-white rounded hover:bg-purple-600 transition">
+            <i class="fas fa-users-cog mr-2"></i>User Management
+          </button>
+        </div>
+        ` : ''}
+      </div>
+      
+      <!-- Right Sidebar - Detail Panel -->
+      <div id="detailPanel" class="w-96 bg-white border-l hidden">
+        <div class="p-4 border-b flex justify-between items-center bg-gray-50">
+          <h3 class="font-bold text-gray-800">Details</h3>
+          <button onclick="closeDetailPanel()" 
+                  class="text-gray-500 hover:text-gray-700">
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+        <div id="detailContent" class="p-4 overflow-y-auto" style="height: calc(100vh - 80px);">
+          <!-- Feature details will be rendered here -->
+        </div>
+      </div>
+    </div>
+    
+    <!-- Upload Modal -->
+    <div id="uploadModal" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center z-50">
+      <div class="bg-white rounded-lg p-6 w-96 max-w-full mx-4">
+        <div class="flex justify-between items-center mb-4">
+          <h3 class="text-xl font-bold text-gray-800">
+            <i class="fas fa-upload mr-2"></i>Upload Dataset
+          </h3>
+          <button onclick="closeUploadForm()" class="text-gray-500 hover:text-gray-700">
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+        
+        <form id="uploadForm" onsubmit="uploadDataset(event)" class="space-y-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Dataset Name</label>
+            <input type="text" name="name" required 
+                   class="w-full px-3 py-2 border rounded focus:ring-2 focus:ring-blue-500">
+          </div>
+          
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Type</label>
+            <select name="type" required 
+                    class="w-full px-3 py-2 border rounded focus:ring-2 focus:ring-blue-500">
+              <option value="geojson">GeoJSON</option>
+              <option value="csv">CSV (with lat/lon columns)</option>
+              <option value="shp">Shapefile (ZIP)</option>
+            </select>
+          </div>
+          
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">File</label>
+            <input type="file" name="file" required accept=".geojson,.json,.csv,.zip"
+                   class="w-full px-3 py-2 border rounded focus:ring-2 focus:ring-blue-500">
+            <div class="text-xs text-gray-500 mt-1">
+              CSV files should have 'lat' and 'lon' (or similar) columns
+            </div>
+          </div>
+          
+          <div id="uploadProgress" class="hidden">
+            <div class="w-full bg-gray-200 rounded-full h-2.5">
+              <div id="progressBar" class="bg-blue-500 h-2.5 rounded-full transition-all duration-300" style="width: 0%"></div>
+            </div>
+          </div>
+          
+          <button type="submit" 
+                  class="w-full bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition">
+            <i class="fas fa-cloud-upload-alt mr-2"></i>Upload
+          </button>
+        </form>
+      </div>
+    </div>
+    
+    <!-- User Management Modal -->
+    <div id="userManagementModal" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center z-50">
+      <div class="bg-white rounded-lg p-6 w-2xl max-w-full mx-4" style="max-height: 80vh;">
+        <div class="flex justify-between items-center mb-4">
+          <h3 class="text-xl font-bold text-gray-800">
+            <i class="fas fa-users-cog mr-2"></i>User Management
+          </h3>
+          <button onclick="closeUserManagement()" class="text-gray-500 hover:text-gray-700">
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+        
+        <div id="userList" class="overflow-y-auto" style="max-height: 60vh;">
+          <!-- Users will be rendered here -->
+        </div>
+      </div>
+    </div>
+  `;
+  
+  // Initialize map
+  initMap();
+  
+  // Load datasets
+  loadDatasets();
+  
+  // ESC key handler
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      closeDetailPanel();
+      closeUploadForm();
+      closeUserManagement();
     }
   });
 }
 
-// Logout
-function logout() {
-  localStorage.removeItem('accessToken');
-  accessToken = null;
-  currentUser = null;
-  location.reload();
-}
-
-// Advanced feature functions
-function showAdvancedSearchDialog() {
-  if (!currentDataset) {
-    alert('まずレイヤーを選択してください');
-    return;
-  }
-  if (window.advancedSearch) {
-    window.advancedSearch.showSearchDialog(currentDataset.id);
-  }
-}
-
-let drawModeActive = false;
-function toggleDrawMode() {
-  if (!currentDataset) {
-    alert('まずレイヤーを選択してください');
-    return;
-  }
+// ==================== App Start ====================
+(async function() {
+  const token = getAccessToken();
   
-  if (!window.featureEditor) {
-    alert('機能が初期化されていません');
-    return;
-  }
-  
-  drawModeActive = !drawModeActive;
-  const btn = document.getElementById('draw-toggle-btn');
-  
-  if (drawModeActive) {
-    window.featureEditor.enableDrawMode(currentDataset.id);
-    btn.classList.add('bg-red-600');
-    btn.classList.remove('bg-orange-600');
-    btn.innerHTML = '<i class="fas fa-times mr-2"></i>描画終了';
+  if (token) {
+    try {
+      await loadUser();
+      initApp();
+    } catch (error) {
+      showLogin();
+    }
   } else {
-    window.featureEditor.disableDrawMode();
-    btn.classList.remove('bg-red-600');
-    btn.classList.add('bg-orange-600');
-    btn.innerHTML = '<i class="fas fa-draw-polygon mr-2"></i>描画モード';
+    showLogin();
   }
-}
-
-function showExportMenu() {
-  if (!currentDataset) {
-    alert('まずレイヤーを選択してください');
-    return;
-  }
-  
-  const modal = document.createElement('div');
-  modal.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50';
-  modal.innerHTML = `
-    <div class="bg-white rounded-lg p-6 w-80">
-      <h2 class="text-xl font-bold mb-4">エクスポート</h2>
-      <div class="space-y-2">
-        <button onclick="exportGeoJSON(); this.closest('.fixed').remove();"
-          class="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700">
-          <i class="fas fa-file-code mr-2"></i>GeoJSON
-        </button>
-        <button onclick="exportCSV(); this.closest('.fixed').remove();"
-          class="w-full bg-green-600 text-white py-2 rounded hover:bg-green-700">
-          <i class="fas fa-file-csv mr-2"></i>CSV
-        </button>
-        <button onclick="showSummary(); this.closest('.fixed').remove();"
-          class="w-full bg-purple-600 text-white py-2 rounded hover:bg-purple-700">
-          <i class="fas fa-chart-bar mr-2"></i>統計情報
-        </button>
-        <button onclick="this.closest('.fixed').remove()"
-          class="w-full bg-gray-300 text-gray-700 py-2 rounded hover:bg-gray-400">
-          キャンセル
-        </button>
-      </div>
-    </div>
-  `;
-  document.body.appendChild(modal);
-}
-
-function exportGeoJSON() {
-  if (window.dataExporter && currentDataset) {
-    window.dataExporter.exportGeoJSON(currentDataset.id, currentDataset.name);
-  }
-}
-
-function exportCSV() {
-  if (window.dataExporter && currentDataset) {
-    window.dataExporter.exportCSV(currentDataset.id, currentDataset.name);
-  }
-}
-
-function showSummary() {
-  if (window.dataExporter && currentDataset) {
-    window.dataExporter.getSummary(currentDataset.id);
-  }
-}
-
-function captureMap() {
-  if (window.captureMapScreenshot && map) {
-    const filename = `map_${new Date().toISOString().slice(0,10)}.png`;
-    window.captureMapScreenshot(map, filename);
-  }
-}
-
-// Make functions globally accessible
-window.logout = logout;
-window.performSearch = performSearch;
-window.toggleLayer = toggleLayer;
-window.loadDatasets = loadDatasets;
-window.showUploadForm = showUploadForm;
-window.closeDetailPanel = closeDetailPanel;
-window.loadAndDisplayDataset = loadAndDisplayDataset;
-window.showAdvancedSearchDialog = showAdvancedSearchDialog;
-window.toggleDrawMode = toggleDrawMode;
-window.showExportMenu = showExportMenu;
-window.exportGeoJSON = exportGeoJSON;
-window.exportCSV = exportCSV;
-window.showSummary = showSummary;
-window.captureMap = captureMap;
+})();

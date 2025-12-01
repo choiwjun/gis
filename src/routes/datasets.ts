@@ -129,14 +129,15 @@ datasets.post('/upload', requireRole('admin', 'editor'), async (c: AppContext) =
       }
     });
 
-    // Parse GeoJSON if type is geojson
+    // Parse file based on type
     let recordCount = 0;
     let schemaJson = null;
+    let geojson: any = null;
 
     if (type === 'geojson') {
       try {
         const text = new TextDecoder().decode(fileBuffer);
-        const geojson = JSON.parse(text);
+        geojson = JSON.parse(text);
         
         if (geojson.type === 'FeatureCollection' && Array.isArray(geojson.features)) {
           recordCount = geojson.features.length;
@@ -183,6 +184,84 @@ datasets.post('/upload', requireRole('admin', 'editor'), async (c: AppContext) =
         console.error('GeoJSON parse error:', parseError);
         // Continue anyway - file is uploaded to R2
       }
+    } else if (type === 'csv') {
+      // Parse CSV with geocoding
+      try {
+        const text = new TextDecoder().decode(fileBuffer);
+        const lines = text.split('\n').filter(line => line.trim());
+        
+        if (lines.length > 1) {
+          const headers = lines[0].split(',').map(h => h.trim());
+          
+          // Detect coordinate columns
+          const lonCol = headers.findIndex(h => /^(lon|longitude|lng|x)$/i.test(h));
+          const latCol = headers.findIndex(h => /^(lat|latitude|y)$/i.test(h));
+          
+          if (lonCol !== -1 && latCol !== -1) {
+            // Convert CSV to GeoJSON
+            const features = [];
+            
+            for (let i = 1; i < Math.min(lines.length, 1001); i++) {
+              const values = lines[i].split(',').map(v => v.trim());
+              
+              if (values.length === headers.length) {
+                const lon = parseFloat(values[lonCol]);
+                const lat = parseFloat(values[latCol]);
+                
+                if (!isNaN(lon) && !isNaN(lat)) {
+                  const properties: any = {};
+                  headers.forEach((header, idx) => {
+                    if (idx !== lonCol && idx !== latCol) {
+                      properties[header] = values[idx];
+                    }
+                  });
+                  
+                  const featureId = generateId('feature');
+                  features.push({
+                    id: featureId,
+                    geometry: { type: 'Point', coordinates: [lon, lat] },
+                    properties
+                  });
+                  
+                  // Store in database
+                  await c.env.DB.prepare(`
+                    INSERT INTO features (id, dataset_id, geometry_type, min_lon, min_lat, max_lon, max_lat, properties_json)
+                    VALUES (?, ?, 'Point', ?, ?, ?, ?, ?)
+                  `).bind(
+                    featureId,
+                    datasetId,
+                    lon, lat, lon, lat,
+                    JSON.stringify(properties)
+                  ).run();
+                }
+              }
+            }
+            
+            recordCount = features.length;
+            
+            // Extract schema
+            if (headers.length > 0) {
+              const schema: Record<string, string> = {};
+              headers.forEach(header => {
+                if (header !== headers[lonCol] && header !== headers[latCol]) {
+                  schema[header] = 'string';
+                }
+              });
+              schemaJson = JSON.stringify({ properties: schema });
+            }
+          }
+        }
+      } catch (csvError) {
+        console.error('CSV parse error:', csvError);
+      }
+    } else if (type === 'shp') {
+      // Shapefile placeholder - in production, use shapefile parser
+      // For now, treat as generic upload
+      recordCount = 0;
+      schemaJson = JSON.stringify({ 
+        note: 'Shapefile uploaded. Manual processing required.',
+        filename: file.name
+      });
     }
 
     // Insert dataset metadata
