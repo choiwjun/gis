@@ -1,0 +1,16 @@
+# Vercel ignore - Cloudflare specific files
+wrangler.toml
+.wrangler/
+migrations/
+seed.sql
+
+# Local development
+.env
+.dev.vars
+
+# PM2
+ecosystem.config.cjs
+
+# Demo files
+demo_*.geojson
+demo_*.csv
