@@ -15,8 +15,9 @@ React + MapLibre GL JS を使用した GIS フロントエンド Web アプリ�
 
 ## 🌐 URL
 
+- **GitHub**: https://github.com/choiwjun/gis
 - **開発環境**: https://3000-ig7guhzuxsz4gnlkrlkul-583b4d74.sandbox.novita.ai
-- **本番環境**: (デプロイ後に更新)
+- **本番環境**: (Cloudflare Pages デプロイ後に更新)
 - **API エンドポイント**: `/api/*`
 
 ## ✨ 実装済み機能
