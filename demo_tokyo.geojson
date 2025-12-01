@@ -1,0 +1,485 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [139.7671, 35.6812]
+      },
+      "properties": {
+        "name": "東京駅",
+        "name_en": "Tokyo Station",
+        "category": "交通",
+        "type": "駅",
+        "score": 96,
+        "address": "東京都千代田区丸の内1丁目",
+        "description": "日本の鉄道の玄関口、赤レンガ駅舎が美しい"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [139.7006, 35.6897]
+      },
+      "properties": {
+        "name": "新宿駅",
+        "name_en": "Shinjuku Station",
+        "category": "交通",
+        "type": "駅",
+        "score": 98,
+        "address": "東京都新宿区新宿3丁目",
+        "description": "世界一利用者数が多い駅"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [139.6503, 35.6762]
+      },
+      "properties": {
+        "name": "渋谷駅",
+        "name_en": "Shibuya Station",
+        "category": "交通",
+        "type": "駅",
+        "score": 95,
+        "address": "東京都渋谷区道玄坂1丁目",
+        "description": "若者文化の中心地、スクランブル交差点が有名"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [139.7024, 35.6284]
+      },
+      "properties": {
+        "name": "東京タワー",
+        "name_en": "Tokyo Tower",
+        "category": "観光",
+        "type": "ランドマーク",
+        "score": 93,
+        "address": "東京都港区芝公園4-2-8",
+        "description": "333m、東京のシンボルタワー"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [139.8107, 35.7101]
+      },
+      "properties": {
+        "name": "東京スカイツリー",
+        "name_en": "Tokyo Skytree",
+        "category": "観光",
+        "type": "ランドマーク",
+        "score": 97,
+        "address": "東京都墨田区押上1-1-2",
+        "description": "634m、世界一高い自立式電波塔"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [139.7454, 35.6586]
+      },
+      "properties": {
+        "name": "皇居",
+        "name_en": "Imperial Palace",
+        "category": "観光",
+        "type": "史跡",
+        "score": 90,
+        "address": "東京都千代田区千代田1-1",
+        "description": "天皇陛下のお住まい、江戸城跡"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [139.7638, 35.6654]
+      },
+      "properties": {
+        "name": "秋葉原",
+        "name_en": "Akihabara",
+        "category": "文化",
+        "type": "電気街",
+        "score": 92,
+        "address": "東京都千代田区外神田",
+        "description": "オタク文化の聖地、電気街"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [139.7967, 35.7148]
+      },
+      "properties": {
+        "name": "浅草寺",
+        "name_en": "Senso-ji Temple",
+        "category": "観光",
+        "type": "寺院",
+        "score": 94,
+        "address": "東京都台東区浅草2-3-1",
+        "description": "東京最古の寺、雷門で有名"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [139.6993, 35.6658]
+      },
+      "properties": {
+        "name": "明治神宮",
+        "name_en": "Meiji Shrine",
+        "category": "観光",
+        "type": "神社",
+        "score": 91,
+        "address": "東京都渋谷区代々木神園町1-1",
+        "description": "明治天皇を祀る神社、広大な森"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [139.6917, 35.6938]
+      },
+      "properties": {
+        "name": "新宿御苑",
+        "name_en": "Shinjuku Gyoen",
+        "category": "公園",
+        "type": "庭園",
+        "score": 88,
+        "address": "東京都新宿区内藤町11",
+        "description": "四季折々の花が美しい広大な庭園"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [139.6970, 35.6764]
+      },
+      "properties": {
+        "name": "代々木公園",
+        "name_en": "Yoyogi Park",
+        "category": "公園",
+        "type": "都市公園",
+        "score": 85,
+        "address": "東京都渋谷区代々木神園町2-1",
+        "description": "都心のオアシス、イベント多数"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [139.7707, 35.6709]
+      },
+      "properties": {
+        "name": "上野公園",
+        "name_en": "Ueno Park",
+        "category": "公園",
+        "type": "都市公園",
+        "score": 87,
+        "address": "東京都台東区上野公園",
+        "description": "桜の名所、博物館や動物園がある"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [139.6380, 35.6586]
+      },
+      "properties": {
+        "name": "原宿",
+        "name_en": "Harajuku",
+        "category": "文化",
+        "type": "繁華街",
+        "score": 89,
+        "address": "東京都渋谷区神宮前",
+        "description": "若者ファッションの発信地、竹下通り"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [139.7029, 35.6672]
+      },
+      "properties": {
+        "name": "六本木ヒルズ",
+        "name_en": "Roppongi Hills",
+        "category": "商業",
+        "type": "複合施設",
+        "score": 90,
+        "address": "東京都港区六本木6-10-1",
+        "description": "高層ビル、美術館、商業施設"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [139.7740, 35.6938]
+      },
+      "properties": {
+        "name": "アメ横",
+        "name_en": "Ameya-Yokocho",
+        "category": "商業",
+        "type": "商店街",
+        "score": 83,
+        "address": "東京都台東区上野4-6",
+        "description": "活気あふれる商店街、年末は大混雑"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [139.7005, 35.6652]
+      },
+      "properties": {
+        "name": "表参道",
+        "name_en": "Omotesando",
+        "category": "商業",
+        "type": "通り",
+        "score": 88,
+        "address": "東京都港区北青山",
+        "description": "ケヤキ並木、高級ブランド店が並ぶ"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [139.7632, 35.6762]
+      },
+      "properties": {
+        "name": "東京ドーム",
+        "name_en": "Tokyo Dome",
+        "category": "スポーツ",
+        "type": "球場",
+        "score": 86,
+        "address": "東京都文京区後楽1-3-61",
+        "description": "読売ジャイアンツの本拠地"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [139.7753, 35.6895]
+      },
+      "properties": {
+        "name": "国立西洋美術館",
+        "name_en": "National Museum of Western Art",
+        "category": "文化",
+        "type": "美術館",
+        "score": 84,
+        "address": "東京都台東区上野公園7-7",
+        "description": "世界文化遺産、西洋美術のコレクション"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [139.7448, 35.6295]
+      },
+      "properties": {
+        "name": "お台場",
+        "name_en": "Odaiba",
+        "category": "観光",
+        "type": "臨海副都心",
+        "score": 89,
+        "address": "東京都港区台場",
+        "description": "レインボーブリッジ、フジテレビ、ショッピング"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [139.6917, 35.6895]
+      },
+      "properties": {
+        "name": "歌舞伎町",
+        "name_en": "Kabukicho",
+        "category": "文化",
+        "type": "歓楽街",
+        "score": 82,
+        "address": "東京都新宿区歌舞伎町",
+        "description": "日本最大の歓楽街、ゴジラヘッド"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [139.7966, 35.7056]
+      },
+      "properties": {
+        "name": "両国国技館",
+        "name_en": "Ryogoku Kokugikan",
+        "category": "スポーツ",
+        "type": "競技場",
+        "score": 85,
+        "address": "東京都墨田区横網1-3-28",
+        "description": "大相撲の聖地"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [139.7451, 35.6803]
+      },
+      "properties": {
+        "name": "丸の内",
+        "name_en": "Marunouchi",
+        "category": "商業",
+        "type": "ビジネス街",
+        "score": 87,
+        "address": "東京都千代田区丸の内",
+        "description": "高層ビル街、オフィス街"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [139.7661, 35.6725]
+      },
+      "properties": {
+        "name": "神田明神",
+        "name_en": "Kanda Myojin Shrine",
+        "category": "観光",
+        "type": "神社",
+        "score": 81,
+        "address": "東京都千代田区外神田2-16-2",
+        "description": "江戸総鎮守、商売繁盛の神様"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [139.6369, 35.6654]
+      },
+      "properties": {
+        "name": "代官山",
+        "name_en": "Daikanyama",
+        "category": "文化",
+        "type": "住宅街",
+        "score": 84,
+        "address": "東京都渋谷区代官山町",
+        "description": "おしゃれな街、蔦屋書店"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [139.7452, 35.6654]
+      },
+      "properties": {
+        "name": "銀座",
+        "name_en": "Ginza",
+        "category": "商業",
+        "type": "高級商店街",
+        "score": 92,
+        "address": "東京都中央区銀座",
+        "description": "高級ブランド店、老舗デパート"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [139.8089, 35.7100]
+      },
+      "properties": {
+        "name": "東京ソラマチ",
+        "name_en": "Tokyo Solamachi",
+        "category": "商業",
+        "type": "ショッピングモール",
+        "score": 88,
+        "address": "東京都墨田区押上1-1-2",
+        "description": "スカイツリー直結、312店舗"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [139.6991, 35.6585]
+      },
+      "properties": {
+        "name": "東京ミッドタウン",
+        "name_en": "Tokyo Midtown",
+        "category": "商業",
+        "type": "複合施設",
+        "score": 86,
+        "address": "東京都港区赤坂9-7-1",
+        "description": "高層ビル、ショップ、美術館"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [139.7434, 35.6654]
+      },
+      "properties": {
+        "name": "築地市場跡",
+        "name_en": "Tsukiji Market",
+        "category": "観光",
+        "type": "市場跡地",
+        "score": 80,
+        "address": "東京都中央区築地5丁目",
+        "description": "かつての日本最大の魚市場"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [139.7818, 35.6812]
+      },
+      "properties": {
+        "name": "谷中銀座",
+        "name_en": "Yanaka Ginza",
+        "category": "文化",
+        "type": "商店街",
+        "score": 82,
+        "address": "東京都台東区谷中3-13",
+        "description": "下町情緒あふれる商店街、夕やけだんだん"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [139.6995, 35.6654]
+      },
+      "properties": {
+        "name": "国立新美術館",
+        "name_en": "National Art Center Tokyo",
+        "category": "文化",
+        "type": "美術館",
+        "score": 85,
+        "address": "東京都港区六本木7-22-2",
+        "description": "波打つガラスの外観が美しい"
+      }
+    }
+  ]
+}
